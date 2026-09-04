@@ -1,0 +1,138 @@
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import type { CartEntry } from "../src/components/CartDrawer";
+import { formatToman, toFa } from "../src/hooks/useReveal";
+import { IconArrow, IconCheck, IconShield, IconWallet, IconX } from "../src/components/icons";
+
+interface CheckoutProps {
+  cartEntries?: CartEntry[];
+  cartTotal?: number;
+  onInc?: (id: string) => void;
+  onDec?: (id: string) => void;
+  onRemove?: (id: string) => void;
+}
+
+type PaymentMethod = "zarinpal" | "crypto";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+
+export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, onDec, onRemove }: CheckoutProps) {
+  const [method, setMethod] = useState<PaymentMethod>("zarinpal");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const totalItems = useMemo(() => cartEntries.reduce((sum, item) => sum + item.qty, 0), [cartEntries]);
+
+  const startPayment = async () => {
+    setError("");
+    if (!cartEntries.length) return;
+    setLoading(true);
+
+    try {
+      const endpoint = method === "zarinpal" ? "/api/payments/zarinpal/create" : "/api/payments/crypto/create";
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: cartTotal,
+          currency: "IRT",
+          items: cartEntries.map(({ product, qty }) => ({ id: product.id, name: product.name, qty, price: product.price })),
+          callback_url: `${window.location.origin}/payment/result`,
+        }),
+      });
+
+      if (!response.ok) throw new Error("payment_failed");
+      const data = await response.json();
+      const paymentUrl = data.payment_url || data.url || data.redirect_url;
+      if (!paymentUrl) throw new Error("missing_url");
+      window.location.href = paymentUrl;
+    } catch {
+      setError("درگاه پرداخت هنوز به بک‌اند متصل نشده است. ابتدا API پرداخت جنگو را روی آدرس NEXT_PUBLIC_API_URL تنظیم کنید.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!cartEntries.length) {
+    return (
+      <section className="checkout-page">
+        <div className="checkout-empty reveal is-visible">
+          <span className="checkout-empty-icon"><IconWallet size={34} /></span>
+          <h1>سبد خرید خالی است</h1>
+          <p>برای رفتن به پرداخت، ابتدا محصول موردنظرتان را به سبد اضافه کنید.</p>
+          <Link href="/products" className="btn btn-primary">مشاهده محصولات <IconArrow size={17} /></Link>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="checkout-page">
+      <div className="checkout-head reveal is-visible">
+        <span className="eyebrow">پرداخت امن صمدی فارم</span>
+        <h1>تکمیل سفارش</h1>
+        <p>روش پرداخت موردنظر را انتخاب کنید و سفارش خود را نهایی کنید.</p>
+      </div>
+
+      <div className="checkout-grid">
+        <div className="checkout-main">
+          <div className="checkout-card reveal is-visible">
+            <div className="checkout-card-title"><span>۱</span><div><h2>روش پرداخت</h2><p>پرداخت ریالی یا رمزارزی</p></div></div>
+
+            <div className="payment-methods">
+              <button type="button" className={`payment-method ${method === "zarinpal" ? "active" : ""}`} onClick={() => setMethod("zarinpal")}>
+                <span className="payment-logo zarinpal-logo">ZP</span>
+                <span><strong>زرین‌پال</strong><small>پرداخت آنلاین با کارت‌های بانکی</small></span>
+                <span className="payment-radio" />
+              </button>
+              <button type="button" className={`payment-method ${method === "crypto" ? "active" : ""}`} onClick={() => setMethod("crypto")}>
+                <span className="payment-logo crypto-logo">₿</span>
+                <span><strong>پرداخت با کریپتو</strong><small>پرداخت رمزارزی از طریق درگاه متصل به API</small></span>
+                <span className="payment-radio" />
+              </button>
+            </div>
+
+            <div className="payment-notice">
+              <IconShield size={19} />
+              <span>اطلاعات کارت و کلیدهای کیف پول در سایت ذخیره نمی‌شود.</span>
+            </div>
+
+            {error && <div className="payment-error"><IconX size={18} />{error}</div>}
+
+            <button type="button" className="btn btn-primary checkout-pay" onClick={startPayment} disabled={loading}>
+              {loading ? "در حال انتقال به درگاه..." : `پرداخت ${formatToman(cartTotal)} تومان`}
+              {!loading && <IconArrow size={17} />}
+            </button>
+          </div>
+
+          <div className="checkout-card reveal is-visible">
+            <div className="checkout-card-title"><span>۲</span><div><h2>اقلام سفارش</h2><p>{toFa(totalItems)} قلم محصول</p></div></div>
+            <div className="checkout-items">
+              {cartEntries.map(({ product, qty }) => (
+                <div className="checkout-item" key={product.id}>
+                  <img src={product.img} alt={product.name} />
+                  <div className="checkout-item-info"><strong>{product.name}</strong><small>{product.weight} · {toFa(qty)} عدد</small></div>
+                  <div className="checkout-item-actions">
+                    <button type="button" onClick={() => onInc?.(product.id)}>+</button><span>{toFa(qty)}</span><button type="button" onClick={() => onDec?.(product.id)}>−</button>
+                  </div>
+                  <strong>{formatToman(product.price * qty)} تومان</strong>
+                  <button type="button" className="checkout-remove" aria-label={`حذف ${product.name}`} onClick={() => onRemove?.(product.id)}><IconX size={15} /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <aside className="checkout-summary reveal is-visible">
+          <div className="summary-top"><span>خلاصه سفارش</span><span>{toFa(totalItems)} قلم</span></div>
+          <div className="summary-lines">
+            <div><span>مبلغ محصولات</span><strong>{formatToman(cartTotal)} تومان</strong></div>
+            <div><span>هزینه ارسال</span><strong>پس از ثبت آدرس</strong></div>
+          </div>
+          <div className="summary-total"><span>مبلغ قابل پرداخت</span><strong>{formatToman(cartTotal)} <small>تومان</small></strong></div>
+          <div className="summary-security"><IconCheck size={17} /> پرداخت امن و پیگیری سفارش</div>
+        </aside>
+      </div>
+    </section>
+  );
+}
