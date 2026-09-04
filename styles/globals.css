@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@100..900&display=swap');
 @import "../src/styles/site.css";
 @import "../src/styles/reveal.css";
+@import "../src/styles/checkout.css";
 html,body{direction:rtl}body{min-height:100vh}
