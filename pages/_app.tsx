@@ -65,7 +65,16 @@ export default function App({ Component, pageProps }: AppProps) {
       <Header cartCount={count} onOpenCart={() => setCartOpen(true)} />
       <main>
         <div key={router.asPath} className="page-in">
-          <Component {...pageProps} onAdd={add} justAddedId={justAddedId} />
+          <Component
+            {...pageProps}
+            onAdd={add}
+            justAddedId={justAddedId}
+            cartEntries={entries}
+            cartTotal={total}
+            onInc={inc}
+            onDec={dec}
+            onRemove={remove}
+          />
         </div>
       </main>
       <Footer />
@@ -77,7 +86,10 @@ export default function App({ Component, pageProps }: AppProps) {
         onInc={inc}
         onDec={dec}
         onRemove={remove}
-        onCheckout={() => setEntries([])}
+        onCheckout={() => {
+          setCartOpen(false);
+          router.push("/checkout");
+        }}
       />
       <div className={`toast${toast ? " is-show" : ""}`} role="status" aria-live="polite">
         {toast && <><IconCheck size={18} />{toast}</>}
