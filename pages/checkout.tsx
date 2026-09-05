@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import type { CartEntry } from "../src/components/CartDrawer";
 import { formatToman, toFa } from "../src/hooks/useReveal";
 import { IconArrow, IconCheck, IconShield, IconWallet, IconX } from "../src/components/icons";
+import type { ShippingAddress } from "./address";
 
 interface CheckoutProps {
   cartEntries?: CartEntry[];
@@ -15,17 +17,33 @@ interface CheckoutProps {
 type PaymentMethod = "zarinpal" | "crypto";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+const ADDRESS_KEY = "samadiFarm.shippingAddress";
 
 export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, onDec, onRemove }: CheckoutProps) {
+  const router = useRouter();
   const [method, setMethod] = useState<PaymentMethod>("zarinpal");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [address, setAddress] = useState<ShippingAddress | null>(null);
 
   const totalItems = useMemo(() => cartEntries.reduce((sum, item) => sum + item.qty, 0), [cartEntries]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(ADDRESS_KEY);
+      if (saved) setAddress(JSON.parse(saved));
+    } catch {
+      setAddress(null);
+    }
+  }, []);
 
   const startPayment = async () => {
     setError("");
     if (!cartEntries.length) return;
+    if (!address) {
+      router.push("/address");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -37,6 +55,7 @@ export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, o
           amount: cartTotal,
           currency: "IRT",
           items: cartEntries.map(({ product, qty }) => ({ id: product.id, name: product.name, qty, price: product.price })),
+          shipping_address: address,
           callback_url: `${window.location.origin}/payment/result`,
         }),
       });
@@ -71,50 +90,58 @@ export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, o
       <div className="checkout-head reveal is-visible">
         <span className="eyebrow">پرداخت امن صمدی فارم</span>
         <h1>تکمیل سفارش</h1>
-        <p>روش پرداخت موردنظر را انتخاب کنید و سفارش خود را نهایی کنید.</p>
+        <p>{address ? "آدرس ارسال را بررسی کنید، سپس روش پرداخت را انتخاب کنید." : "ابتدا آدرس ارسال را ثبت کنید و سپس سفارش را پرداخت کنید."}</p>
       </div>
 
       <div className="checkout-grid">
         <div className="checkout-main">
           <div className="checkout-card reveal is-visible">
-            <div className="checkout-card-title"><span>۱</span><div><h2>روش پرداخت</h2><p>پرداخت ریالی یا رمزارزی</p></div></div>
+            <div className="checkout-card-title"><span>۱</span><div><h2>آدرس ارسال</h2><p>اطلاعات گیرنده سفارش</p></div></div>
+            {address ? (
+              <div className="shipping-address-card">
+                <div className="shipping-address-main">
+                  <strong>{address.fullName}</strong>
+                  <span>📞 {address.phone}</span>
+                  <span>📍 {address.province}، {address.city}</span>
+                  <span>{address.address}{address.plaque ? `، پلاک ${address.plaque}` : ""}{address.unit ? `، واحد ${address.unit}` : ""}</span>
+                  <span>📮 کد پستی: {address.postalCode}</span>
+                </div>
+                <button type="button" className="address-edit" onClick={() => router.push("/address")}>ویرایش آدرس</button>
+              </div>
+            ) : (
+              <div className="address-required">
+                <p>برای ادامه پرداخت، ابتدا یک آدرس برای ارسال سفارش ثبت کنید.</p>
+                <button type="button" className="btn btn-primary" onClick={() => router.push("/address")}>ثبت آدرس <IconArrow size={17} /></button>
+              </div>
+            )}
+          </div>
 
+          <div className="checkout-card reveal is-visible">
+            <div className="checkout-card-title"><span>۲</span><div><h2>روش پرداخت</h2><p>پرداخت ریالی یا رمزارزی</p></div></div>
             <div className="payment-methods">
               <button type="button" className={`payment-method ${method === "zarinpal" ? "active" : ""}`} onClick={() => setMethod("zarinpal")}>
-                <span className="payment-logo zarinpal-logo">ZP</span>
-                <span><strong>زرین‌پال</strong><small>پرداخت آنلاین با کارت‌های بانکی</small></span>
-                <span className="payment-radio" />
+                <span className="payment-logo zarinpal-logo">ZP</span><span><strong>زرین‌پال</strong><small>پرداخت آنلاین با کارت‌های بانکی</small></span><span className="payment-radio" />
               </button>
               <button type="button" className={`payment-method ${method === "crypto" ? "active" : ""}`} onClick={() => setMethod("crypto")}>
-                <span className="payment-logo crypto-logo">₿</span>
-                <span><strong>پرداخت با کریپتو</strong><small>پرداخت رمزارزی از طریق درگاه متصل به API</small></span>
-                <span className="payment-radio" />
+                <span className="payment-logo crypto-logo">₿</span><span><strong>پرداخت با کریپتو</strong><small>پرداخت رمزارزی از طریق درگاه متصل به API</small></span><span className="payment-radio" />
               </button>
             </div>
-
-            <div className="payment-notice">
-              <IconShield size={19} />
-              <span>اطلاعات کارت و کلیدهای کیف پول در سایت ذخیره نمی‌شود.</span>
-            </div>
-
+            <div className="payment-notice"><IconShield size={19} /><span>اطلاعات کارت و کلیدهای کیف پول در سایت ذخیره نمی‌شود.</span></div>
             {error && <div className="payment-error"><IconX size={18} />{error}</div>}
-
-            <button type="button" className="btn btn-primary checkout-pay" onClick={startPayment} disabled={loading}>
-              {loading ? "در حال انتقال به درگاه..." : `پرداخت ${formatToman(cartTotal)} تومان`}
-              {!loading && <IconArrow size={17} />}
+            <button type="button" className="btn btn-primary checkout-pay" onClick={startPayment} disabled={loading || !address}>
+              {!address ? "ابتدا آدرس را ثبت کنید" : loading ? "در حال انتقال به درگاه..." : `پرداخت ${formatToman(cartTotal)} تومان`}
+              {!loading && address && <IconArrow size={17} />}
             </button>
           </div>
 
           <div className="checkout-card reveal is-visible">
-            <div className="checkout-card-title"><span>۲</span><div><h2>اقلام سفارش</h2><p>{toFa(totalItems)} قلم محصول</p></div></div>
+            <div className="checkout-card-title"><span>۳</span><div><h2>اقلام سفارش</h2><p>{toFa(totalItems)} قلم محصول</p></div></div>
             <div className="checkout-items">
               {cartEntries.map(({ product, qty }) => (
                 <div className="checkout-item" key={product.id}>
                   <img src={product.img} alt={product.name} />
                   <div className="checkout-item-info"><strong>{product.name}</strong><small>{product.weight} · {toFa(qty)} عدد</small></div>
-                  <div className="checkout-item-actions">
-                    <button type="button" onClick={() => onInc?.(product.id)}>+</button><span>{toFa(qty)}</span><button type="button" onClick={() => onDec?.(product.id)}>−</button>
-                  </div>
+                  <div className="checkout-item-actions"><button type="button" onClick={() => onInc?.(product.id)}>+</button><span>{toFa(qty)}</span><button type="button" onClick={() => onDec?.(product.id)}>−</button></div>
                   <strong>{formatToman(product.price * qty)} تومان</strong>
                   <button type="button" className="checkout-remove" aria-label={`حذف ${product.name}`} onClick={() => onRemove?.(product.id)}><IconX size={15} /></button>
                 </div>
@@ -127,7 +154,7 @@ export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, o
           <div className="summary-top"><span>خلاصه سفارش</span><span>{toFa(totalItems)} قلم</span></div>
           <div className="summary-lines">
             <div><span>مبلغ محصولات</span><strong>{formatToman(cartTotal)} تومان</strong></div>
-            <div><span>هزینه ارسال</span><strong>پس از ثبت آدرس</strong></div>
+            <div><span>هزینه ارسال</span><strong>{address ? "محاسبه در مرحله ارسال" : "پس از ثبت آدرس"}</strong></div>
           </div>
           <div className="summary-total"><span>مبلغ قابل پرداخت</span><strong>{formatToman(cartTotal)} <small>تومان</small></strong></div>
           <div className="summary-security"><IconCheck size={17} /> پرداخت امن و پیگیری سفارش</div>
