@@ -15,6 +15,6 @@ export default function Footer() {
       <nav aria-label="دسترسی سریع"><h4 className="footer-title">دسترسی سریع</h4><ul className="footer-links">{NAV_ROUTES.map((l) => <li key={l.to}><Link href={l.to}>{l.label}</Link></li>)}</ul></nav>
       <nav aria-label="دسته‌بندی محصولات"><h4 className="footer-title">محصولات</h4><ul className="footer-links">{CATEGORIES.filter((c) => !("scrollTo" in c)).map((c) => <li key={c.id}><button type="button" onClick={() => goCategory(c.id as CategoryId)}>{c.title}</button></li>)}</ul></nav>
       <div><h4 className="footer-title">تماس با کندو</h4><ul className="footer-contact"><li><IconPhone size={16}/><a href={CONTACT.phoneHref} dir="ltr">{CONTACT.phone}</a></li><li><IconYoutube size={16}/><a href={CONTACT.YOUTUBEHref} target="_blank" rel="noreferrer" dir="ltr">@{CONTACT.YOUTUBE}</a></li><li><IconPin size={16}/><span>{CONTACT.address}</span></li><li><IconClock size={16}/><span>{CONTACT.hours}</span></li></ul></div>
-    </div><div className="footer-bottom"><span>© {FOOTER_YEAR} — تمامی حقوق برای <strong>{BRAND.name}</strong> محفوظ است.</span><span>ساخته‌شده با <strong>عسل</strong> و کمی وسواس؛ Next.js</span></div></div></footer>
+    </div><div className="footer-bottom"><span>© {FOOTER_YEAR} — تمامی حقوق برای <strong>{BRAND.name}</strong> محفوظ است.</span><span>ساخته‌شده با <strong>عسل</strong> و کمی وسواس؛</span></div></div></footer>
   );
 }
