@@ -54,7 +54,7 @@ export default function LoginPage() {
         if (!password) return setError("رمز عبور را وارد کنید.");
         await request("/api/auth/login", { phone, password });
       }
-      const next = typeof router.query.next === "string" ? router.query.next : "/address";
+      const next = typeof router.query.next === "string" ? router.query.next : "/account";
       await router.push(next);
     } catch {
       setError("ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید.");
@@ -62,7 +62,7 @@ export default function LoginPage() {
   };
 
   const loginWithGoogle = () => {
-    const next = typeof router.query.next === "string" ? router.query.next : "/address";
+    const next = typeof router.query.next === "string" ? router.query.next : "/account";
     window.location.href = `${API_BASE}/api/auth/google/?next=${encodeURIComponent(next)}`;
   };
 

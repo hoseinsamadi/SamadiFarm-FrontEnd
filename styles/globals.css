@@ -3,5 +3,6 @@
 @import "../src/styles/reveal.css";
 @import "../src/styles/checkout.css";
 @import "../src/styles/auth.css";
+@import "../src/styles/account.css";
 @import "../src/styles/seo.css";
 html,body{direction:rtl}body{min-height:100vh}
