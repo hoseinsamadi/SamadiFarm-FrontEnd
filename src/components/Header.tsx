@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { BRAND } from "../data/site";
 import { toFa, useScrolled } from "../hooks/useReveal";
@@ -26,7 +27,9 @@ export default function Header({ cartCount, onOpenCart }: HeaderProps) {
     <header className={`site-header${scrolled ? " is-scrolled" : ""}${menuOpen ? " menu-open" : ""}`}>
       <div className="shell header-inner">
         <Link href="/" className="brand" aria-label="صمدی فارم — بازگشت به صفحه‌ی خانه">
-          <span className="brand-hex"><span aria-hidden="true">🐝</span></span>
+          <span className="brand-hex">
+            <Image src="/LOGO-HOSEINBEEKEEPER-Small.png" alt="هوشمند" width={40} height={40} />
+          </span>
           <span><strong className="brand-name">{BRAND.name}</strong><span className="brand-tag">{BRAND.tagline}</span></span>
         </Link>
         <nav className="main-nav" aria-label="ناوبری اصلی">
