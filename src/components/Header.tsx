@@ -8,6 +8,7 @@ import { IconBag, IconMenu, IconX } from "./icons";
 export const NAV_ROUTES = [
   { to: "/", label: "خانه" },
   { to: "/products", label: "محصولات" },
+  { to: "/posts", label: "مجله" },
   { to: "/story", label: "داستان ما" },
   { to: "/reviews", label: "دیدگاه‌ها" },
 ];
