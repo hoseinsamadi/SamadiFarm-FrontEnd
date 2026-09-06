@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { BRAND } from "../data/site";
 import { toFa, useScrolled } from "../hooks/useReveal";
-import { IconBag, IconMenu, IconX } from "./icons";
+import { IconBag, IconMenu, IconUser, IconX } from "./icons";
 
 export const NAV_ROUTES = [
   { to: "/", label: "خانه" },
@@ -37,12 +37,14 @@ export default function Header({ cartCount, onOpenCart }: HeaderProps) {
         </nav>
         <div className="header-actions">
           <Link href="/products" className="btn btn-primary btn-sm btn-hide-mobile">سفارش آنلاین</Link>
+          <Link href="/account" className="icon-btn" aria-label="حساب کاربری"><IconUser size={19} /></Link>
           <button type="button" className="cart-btn" onClick={onOpenCart} aria-label={`باز کردن سبد خرید — ${toFa(cartCount)} قلم`}><IconBag size={19} />{cartCount > 0 && <span className="cart-count">{toFa(cartCount)}</span>}</button>
           <button type="button" className="menu-btn" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen} aria-label={menuOpen ? "بستن منو" : "باز کردن منو"}>{menuOpen ? <IconX size={23} /> : <IconMenu size={23} />}</button>
         </div>
       </div>
       <div className={`mobile-menu${menuOpen ? " is-open" : ""}`}>
         {NAV_ROUTES.map((l, i) => <Link key={l.to} href={l.to} style={{ "--d": `${i * .05}s` } as React.CSSProperties} className={`mobile-link${pathname === l.to ? " is-active" : ""}`}>{l.label}</Link>)}
+        <Link href="/account" style={{ "--d": `${NAV_ROUTES.length * .05}s` } as React.CSSProperties} className={`mobile-link${pathname === "/account" ? " is-active" : ""}`}>حساب کاربری</Link>
         <div style={{ padding: "0 0 1rem" }}><Link href="/products" className="btn btn-primary" style={{ marginTop: ".6rem", width: "100%" }}>سفارش آنلاین</Link></div>
       </div>
     </header>

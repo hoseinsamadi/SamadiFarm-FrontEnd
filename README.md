@@ -32,5 +32,3 @@ npm start
 - `src/components/` — کامپوننت‌های سایت
 - `src/data/site.ts` — محتوا، محصولات و لینک‌ها
 - `src/styles/` — استایل سایت
-
-این repository مستقل از نسخه‌ی Vite است و فایل‌های Vite مانند `vite.config.js`، `index.html`، `src/main.tsx` و `react-router-dom` را ندارد.
