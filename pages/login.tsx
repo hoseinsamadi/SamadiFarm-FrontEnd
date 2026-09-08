@@ -24,7 +24,10 @@ export default function LoginPage() {
       credentials: "include",
       body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error("auth_failed");
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { detail?: string } | null;
+      throw new Error(payload?.detail || "auth_failed");
+    }
     return response.json().catch(() => ({}));
   };
 
@@ -33,10 +36,11 @@ export default function LoginPage() {
     if (!validPhone) return setError("لطفاً شماره موبایل معتبر وارد کنید.");
     setLoading(true);
     try {
-      await request("/api/auth/send-otp", { phone });
+      const result = await request("/api/auth/send-otp", { phone }) as { sandbox_code?: string };
       setOtpSent(true);
-    } catch {
-      setError("ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید.");
+      if (result.sandbox_code) setError(`محیط Sandbox فعال است؛ کد آزمایشی: ${result.sandbox_code}`);
+    } catch (error) {
+      setError(error instanceof Error && error.message !== "auth_failed" ? error.message : "ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید.");
     } finally { setLoading(false); }
   };
 
@@ -56,8 +60,8 @@ export default function LoginPage() {
       }
       const next = typeof router.query.next === "string" ? router.query.next : "/address";
       await router.push(next);
-    } catch {
-      setError("ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید.");
+    } catch (error) {
+      setError(error instanceof Error && error.message !== "auth_failed" ? error.message : "ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید.");
     } finally { setLoading(false); }
   };
 
