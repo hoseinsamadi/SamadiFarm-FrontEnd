@@ -4,7 +4,7 @@ import Link from "next/link";
 import { IconArrow, IconCheck, IconUser, IconWallet } from "../src/components/icons";
 import type { ShippingAddress } from "./address";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 const ADDRESS_KEY = "samadiFarm.shippingAddress";
 
 interface AccountUser {
@@ -84,6 +84,12 @@ export default function AccountPage() {
         <h1>سلام {user.name || "کاربر عزیز"} 👋</h1>
         <p>مشخصات حساب و آخرین آدرس ثبت‌شده‌ی شما اینجاست.</p>
       </div>
+
+      <nav className="account-nav address-card reveal is-visible" aria-label="منوی حساب کاربری">
+        <strong>داشبورد</strong>
+        <Link href="/products">خرید محصولات</Link>
+        <button type="button" onClick={logout} disabled={loggingOut}>{loggingOut ? "در حال خروج..." : "خروج"}</button>
+      </nav>
 
       <div className="address-card reveal is-visible">
         <div className="checkout-card-title">

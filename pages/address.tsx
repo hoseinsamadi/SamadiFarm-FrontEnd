@@ -30,15 +30,35 @@ export default function AddressPage() {
   const router = useRouter();
   const [form, setForm] = useState<ShippingAddress>(emptyAddress);
   const [error, setError] = useState("");
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) setForm({ ...emptyAddress, ...JSON.parse(saved) });
-    } catch {
-      // Ignore invalid local data and keep the empty form.
-    }
-  }, []);
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000"}/api/auth/me`, { credentials: "include" });
+        if (!response.ok) {
+          router.replace(`/login?next=${encodeURIComponent("/address")}`);
+          return;
+        }
+        const user = await response.json() as { name?: string };
+        if (!active) return;
+        try {
+          const saved = window.localStorage.getItem(STORAGE_KEY);
+          if (saved) setForm({ ...emptyAddress, ...JSON.parse(saved) });
+          else if (user.name) setForm((current) => ({ ...current, fullName: user.name || "" }));
+        } catch {
+          if (user.name) setForm((current) => ({ ...current, fullName: user.name || "" }));
+        }
+      } catch {
+        router.replace(`/login?next=${encodeURIComponent("/address")}`);
+      } finally {
+        if (active) setCheckingAuth(false);
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [router]);
 
   const update = (field: keyof ShippingAddress, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -64,6 +84,10 @@ export default function AddressPage() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
     router.push("/checkout");
   };
+
+  if (checkingAuth) {
+    return <section className="address-page"><div className="empty-page reveal is-visible"><p>در حال بررسی حساب کاربری...</p></div></section>;
+  }
 
   return (
     <section className="address-page">

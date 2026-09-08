@@ -8,7 +8,7 @@ import type { ShippingAddress } from "./address";
 
 interface CheckoutProps { cartEntries?: CartEntry[]; cartTotal?: number; onInc?: (id: string) => void; onDec?: (id: string) => void; onRemove?: (id: string) => void; }
 type PaymentMethod = "zarinpal" | "crypto";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 const ADDRESS_KEY = "samadiFarm.shippingAddress";
 
 export default function CheckoutPage({ cartEntries = [], cartTotal = 0, onInc, onDec, onRemove }: CheckoutProps) {
