@@ -75,7 +75,7 @@ export const TIMELINE = [
 ];
 export const STATS = [{ value: 71, suffix: "سال", label: "زنبورداری خانوادگی" }, { value: 140, suffix: "", label: "کندوی فعال در سه ییلاق" }, { value: 3200, suffix: "", label: "کیلوگرم عسل در سال" }, { value: 2500, suffix: "+", label: "مشتری همیشگی" }];
 
-export const YOUTUBE = { channelUrl: "https://www.youtube.com/@HoseinBeekeeper", channelLabel: "صمدی فارم در یوتیوب" };
+export const YOUTUBE = { channelUrl: "https://www.youtube.com/@SAmadiFarm", channelLabel: "صمدی فارم در یوتیوب" };
 export interface VideoItem { videoId: string; title: string; duration: string; meta: string; }
 export const FEATURED_VIDEO: VideoItem = { videoId: "OUsCdTlBNn4", title: "روش صحیح برداشت عسل طبیعی از کندو", duration: "۱۴:۲۰", meta: "آموزش زنبورداری • فصل برداشت" };
 export const VIDEOS: VideoItem[] = [
@@ -96,5 +96,5 @@ export const TESTIMONIALS: Testimonial[] = [
 ];
 export const RATING_SUMMARY = { avg: "۴٫۹", total: 312 };
 export const RATING_DIST = [{ stars: 5, pct: 82 }, { stars: 4, pct: 12 }, { stars: 3, pct: 4 }, { stars: 2, pct: 1 }, { stars: 1, pct: 1 }];
-export const CONTACT = { phone: "۰۹۳۸۲۸۶۶۴۰۸", phoneHref: "tel:+989382866408", whatsapp: "989382866408", YOUTUBE: "samadi.farm", YOUTUBEHref: "https://youtube.com/@HoseinBeekeeper", address: "قزوین شهرک عارف فروشگاه صمدی فارم", hours: "شنبه تا پنجشنبه — ۹ صبح تا ۸ شب" };
+export const CONTACT = { phone: "۰۹۳۸۲۸۶۶۴۰۸", phoneHref: "tel:+989382866408", whatsapp: "989382866408", YOUTUBE: "SAmadiFarm", YOUTUBEHref: "https://youtube.com/@SAmadiFarm", address: "قزوین شهرک عارف فروشگاه صمدی فارم", hours: "شنبه تا پنجشنبه — ۹ صبح تا ۸ شب" };
 export const FOOTER_YEAR = "۱۴۰۵";
