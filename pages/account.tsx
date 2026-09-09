@@ -17,6 +17,20 @@ interface AccountUser {
   phone: string | null;
 }
 
+interface OrderItem { name?: string; qty?: number; }
+interface UserOrder {
+  id: number;
+  amount: string;
+  currency: string;
+  payment_status_label: string;
+  order_status: string;
+  order_status_label: string;
+  method_label: string;
+  transaction_hash: string;
+  items: OrderItem[];
+  created_at: string;
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<AccountUser | null>(null);
@@ -27,6 +41,8 @@ export default function AccountPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
+  const [orders, setOrders] = useState<UserOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -39,6 +55,11 @@ export default function AccountPage() {
           const loadedUser = await response.json() as AccountUser;
           setUser(loadedUser);
           setProfile((current) => ({ ...current, firstName: loadedUser.first_name || "", lastName: loadedUser.last_name || "", phone: loadedUser.phone || "" }));
+          const ordersResponse = await fetch(`${API_BASE}/api/payments/my-orders`, { credentials: "include" });
+          if (ordersResponse.ok) {
+            const ordersPayload = await ordersResponse.json() as { orders?: UserOrder[] };
+            if (active) setOrders(ordersPayload.orders || []);
+          }
         } else {
           router.replace(`/login?next=${encodeURIComponent("/account")}`);
           return;
@@ -47,6 +68,7 @@ export default function AccountPage() {
         if (active) router.replace(`/login?next=${encodeURIComponent("/account")}`);
         return;
       } finally {
+        if (active) setOrdersLoading(false);
         if (active) setLoading(false);
       }
     })();
@@ -180,14 +202,12 @@ export default function AccountPage() {
         )}
       </div>
 
-      <div className="address-card reveal is-visible" style={{ marginTop: "1.25rem" }}>
+      <div className="address-card reveal is-visible orders-card" style={{ marginTop: "1.25rem" }}>
         <div className="checkout-card-title">
           <span><IconCheck size={18} /></span>
-          <div><h2>سفارش‌های من</h2><p>در حال حاضر پیگیری سفارش از طریق واتساپ انجام می‌شود</p></div>
+          <div><h2>سفارش‌های من</h2><p>وضعیت سفارش‌ها از همین‌جا قابل پیگیری است.</p></div>
         </div>
-        <p style={{ color: "var(--ink-soft)", fontSize: ".85rem", lineHeight: 2, margin: 0 }}>
-          به‌زودی امکان مشاهده‌ی تاریخچه‌ی سفارش‌ها مستقیماً همین‌جا اضافه می‌شود. تا آن زمان برای پیگیری سفارش با شماره‌ی تماس صمدی فارم در ارتباط باشید.
-        </p>
+        {ordersLoading ? <p className="orders-muted">در حال دریافت سفارش‌ها...</p> : orders.length === 0 ? <p className="orders-muted">هنوز سفارشی برای این حساب ثبت نشده است.</p> : <div className="orders-list">{orders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><strong>سفارش شماره {order.id}</strong><time>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(order.created_at))}</time></div><div className="order-card-meta"><span>پرداخت: {order.payment_status_label}</span><span>روش: {order.method_label}</span><strong>{order.amount} {order.currency}</strong></div><div className="order-status-row"><span className={`order-status order-status--${order.order_status}`}>{order.order_status_label}</span>{order.items?.length > 0 && <span className="order-items-preview">{order.items.map((item) => `${item.name || "محصول"} × ${item.qty || 1}`).join("، ")}</span>}</div>{order.transaction_hash && <small className="order-hash">هش تراکنش: {order.transaction_hash}</small>}</article>)}</div>}
       </div>
 
       <div className="address-actions" style={{ marginTop: "1.5rem" }}>
