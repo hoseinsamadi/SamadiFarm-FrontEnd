@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type React from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { IconArrow, IconCheck, IconUser, IconWallet } from "../src/components/icons";
@@ -10,6 +11,8 @@ const ADDRESS_KEY = "samadiFarm.shippingAddress";
 interface AccountUser {
   id: number;
   name: string;
+  first_name: string;
+  last_name: string;
   email: string | null;
   phone: string | null;
 }
@@ -20,6 +23,10 @@ export default function AccountPage() {
   const [address, setAddress] = useState<ShippingAddress | null>(null);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [profile, setProfile] = useState({ firstName: "", lastName: "", phone: "", password: "", passwordConfirm: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [profileError, setProfileError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -29,7 +36,9 @@ export default function AccountPage() {
         const response = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
         if (!active) return;
         if (response.ok) {
-          setUser(await response.json());
+          const loadedUser = await response.json() as AccountUser;
+          setUser(loadedUser);
+          setProfile((current) => ({ ...current, firstName: loadedUser.first_name || "", lastName: loadedUser.last_name || "", phone: loadedUser.phone || "" }));
         } else {
           router.replace(`/login?next=${encodeURIComponent("/account")}`);
           return;
@@ -65,6 +74,34 @@ export default function AccountPage() {
     router.push("/");
   };
 
+  const saveProfile = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setProfileError("");
+    setProfileMessage("");
+    if (profile.password && profile.password !== profile.passwordConfirm) {
+      setProfileError("تکرار رمز ثابت با رمز اصلی یکسان نیست.");
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/profile`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ first_name: profile.firstName, last_name: profile.lastName, phone: profile.phone, password: profile.password }),
+      });
+      const payload = await response.json().catch(() => ({})) as { detail?: string; user?: AccountUser };
+      if (!response.ok) throw new Error(payload.detail || "ذخیره مشخصات انجام نشد.");
+      if (payload.user) setUser(payload.user);
+      setProfile((current) => ({ ...current, password: "", passwordConfirm: "" }));
+      setProfileMessage("مشخصات حساب با موفقیت ذخیره شد.");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "ذخیره مشخصات انجام نشد.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   if (loading) {
     return (
       <section className="address-page">
@@ -90,6 +127,23 @@ export default function AccountPage() {
         <Link href="/products">خرید محصولات</Link>
         <button type="button" onClick={logout} disabled={loggingOut}>{loggingOut ? "در حال خروج..." : "خروج"}</button>
       </nav>
+
+      <form className="address-card reveal is-visible" onSubmit={saveProfile}>
+        <div className="checkout-card-title">
+          <span><IconUser size={18} /></span>
+          <div><h2>مشخصات کاربر</h2><p>اطلاعات حساب و رمز ورود خود را مدیریت کنید.</p></div>
+        </div>
+        <div className="address-form-grid">
+          <label><span>نام *</span><input value={profile.firstName} onChange={(event) => setProfile({ ...profile, firstName: event.target.value })} placeholder="نام" /></label>
+          <label><span>نام خانوادگی *</span><input value={profile.lastName} onChange={(event) => setProfile({ ...profile, lastName: event.target.value })} placeholder="نام خانوادگی" /></label>
+          <label><span>شماره تماس</span><input value={profile.phone} disabled={Boolean(user.phone)} onChange={(event) => setProfile({ ...profile, phone: event.target.value.replace(/\D/g, "").slice(0, 11) })} placeholder="09123456789" dir="ltr" /></label>
+          <label><span>رمز ثابت جدید</span><input type="password" value={profile.password} onChange={(event) => setProfile({ ...profile, password: event.target.value })} placeholder="حداقل ۶ کاراکتر" dir="ltr" /></label>
+          <label><span>تکرار رمز ثابت</span><input type="password" value={profile.passwordConfirm} onChange={(event) => setProfile({ ...profile, passwordConfirm: event.target.value })} placeholder="تکرار رمز" dir="ltr" /></label>
+        </div>
+        {profileError && <div className="address-error">{profileError}</div>}
+        {profileMessage && <div className="profile-success">{profileMessage}</div>}
+        <div className="address-actions"><button type="submit" className="btn btn-primary" disabled={savingProfile}>{savingProfile ? "در حال ذخیره..." : "ذخیره مشخصات"}</button></div>
+      </form>
 
       <div className="address-card reveal is-visible">
         <div className="checkout-card-title">

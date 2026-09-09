@@ -16,6 +16,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const validPhone = /^09\d{9}$/.test(phone.replace(/\D/g, ""));
+  const errorMessage = (error: unknown, fallback: string) => {
+    const message = error instanceof Error ? error.message : "";
+    if (/network|fetch|failed to fetch/i.test(message)) return "ارتباط با سرور برقرار نشد. لطفاً اجرای Django روی پورت 8000 را بررسی کنید.";
+    return message && message !== "auth_failed" ? message : fallback;
+  };
 
   const request = async (path: string, body: Record<string, unknown>) => {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -40,7 +45,7 @@ export default function LoginPage() {
       setOtpSent(true);
       if (result.sandbox_code) setError(`محیط Sandbox فعال است؛ کد آزمایشی: ${result.sandbox_code}`);
     } catch (error) {
-      setError(error instanceof Error && error.message !== "auth_failed" ? error.message : "ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید.");
+      setError(errorMessage(error, "ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید."));
     } finally { setLoading(false); }
   };
 
@@ -61,7 +66,7 @@ export default function LoginPage() {
       const next = typeof router.query.next === "string" ? router.query.next : "/address";
       await router.push(next);
     } catch (error) {
-      setError(error instanceof Error && error.message !== "auth_failed" ? error.message : "ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید.");
+      setError(errorMessage(error, "ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید."));
     } finally { setLoading(false); }
   };
 
