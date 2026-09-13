@@ -1,12 +1,12 @@
 import ReviewsPage from "../src/pages/ReviewsPage";
-import { getReviews } from "../src/lib/reviewsApi";
+import { getReviewRatingSummary, getReviews } from "../src/lib/reviewsApi";
 
 export const getServerSideProps = async () => {
   try {
-    const { reviews } = await getReviews();
-    return { props: { reviews } };
+    const [{ reviews }, ratingSummary] = await Promise.all([getReviews(), getReviewRatingSummary()]);
+    return { props: { reviews, ratingSummary } };
   } catch {
-    return { props: { reviews: [] } };
+    return { props: { reviews: [], ratingSummary: null } };
   }
 };
 

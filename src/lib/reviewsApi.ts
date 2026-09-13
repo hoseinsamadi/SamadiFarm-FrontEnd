@@ -15,6 +15,18 @@ export interface ReviewPage {
   count: number;
 }
 
+export interface ReviewRatingDistribution {
+  stars: number;
+  count: number;
+  percentage: number;
+}
+
+export interface ReviewRatingSummary {
+  count: number;
+  average: number;
+  distribution: ReviewRatingDistribution[];
+}
+
 interface ReviewListResponse { count?: number; results?: ApiReview[]; }
 
 export async function getReviews(): Promise<ReviewPage> {
@@ -23,6 +35,12 @@ export async function getReviews(): Promise<ReviewPage> {
   const payload = await response.json() as ApiReview[] | ReviewListResponse;
   const reviews = Array.isArray(payload) ? payload : payload.results ?? [];
   return { reviews, count: Array.isArray(payload) ? reviews.length : payload.count ?? reviews.length };
+}
+
+export async function getReviewRatingSummary(): Promise<ReviewRatingSummary> {
+  const response = await fetch(`${API_BASE_URL}/api/reviews/summary/`, { headers: { Accept: "application/json" } });
+  if (!response.ok) throw new Error(`Review summary API request failed (${response.status})`);
+  return response.json() as Promise<ReviewRatingSummary>;
 }
 
 export async function submitReview(review: Pick<ApiReview, "name" | "city" | "stars" | "text">) {
