@@ -5,7 +5,7 @@ import { IconArrow, IconDrop, IconFlask, IconSun } from "./icons";
 
 const BADGE_ICONS = { drop: IconDrop, flask: IconFlask, sun: IconSun };
 const BADGE_POS = ["one", "two", "three"];
-const HERO_IMAGE = "https://raw.githubusercontent.com/hoseinsamadi/SamadiFarmFront/nextjs-preview/mainBiBak.png";
+const HERO_IMAGE = "/mainBiBak.png";
 
 export default function Hero() {
   return <section id="home" className="hero">
