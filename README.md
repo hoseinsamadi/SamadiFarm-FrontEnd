@@ -18,6 +18,8 @@ npm run dev
 
 سپس `http://localhost:3000` را باز کنید.
 
+برای نمایش خودکار ویدیوهای کانال یوتیوب در `/story`، متغیرهای `.env.example` را در `.env.local` قرار دهید و مقدار `YOUTUBE_API_KEY` را تنظیم کنید. مقدار `YOUTUBE_CHANNEL_HANDLE` به صورت پیش‌فرض `SAmadiFarm` است. هر صفحه ۲۰ ویدیو دارد و صفحه‌بندی با token یوتیوب انجام می‌شود.
+
 برای بررسی production:
 
 ```bash

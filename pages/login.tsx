@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { IconArrow, IconShield } from "../src/components/icons";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +16,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const validPhone = /^09\d{9}$/.test(phone.replace(/\D/g, ""));
+  const errorMessage = (error: unknown, fallback: string) => {
+    const message = error instanceof Error ? error.message : "";
+    if (/network|fetch|failed to fetch/i.test(message)) return "ارتباط با سرور برقرار نشد. لطفاً اجرای Django روی پورت 8000 را بررسی کنید.";
+    return message && message !== "auth_failed" ? message : fallback;
+  };
 
   const request = async (path: string, body: Record<string, unknown>) => {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -24,7 +29,10 @@ export default function LoginPage() {
       credentials: "include",
       body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error("auth_failed");
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { detail?: string } | null;
+      throw new Error(payload?.detail || "auth_failed");
+    }
     return response.json().catch(() => ({}));
   };
 
@@ -33,10 +41,11 @@ export default function LoginPage() {
     if (!validPhone) return setError("لطفاً شماره موبایل معتبر وارد کنید.");
     setLoading(true);
     try {
-      await request("/api/auth/send-otp", { phone });
+      const result = await request("/api/auth/send-otp", { phone }) as { sandbox_code?: string };
       setOtpSent(true);
-    } catch {
-      setError("ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید.");
+      if (result.sandbox_code) setError(`محیط Sandbox فعال است؛ کد آزمایشی: ${result.sandbox_code}`);
+    } catch (error) {
+      setError(errorMessage(error, "ارسال کد تأیید انجام نشد. اتصال API احراز هویت را بررسی کنید."));
     } finally { setLoading(false); }
   };
 
@@ -56,8 +65,8 @@ export default function LoginPage() {
       }
       const next = typeof router.query.next === "string" ? router.query.next : "/address";
       await router.push(next);
-    } catch {
-      setError("ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید.");
+    } catch (error) {
+      setError(errorMessage(error, "ورود انجام نشد. شماره موبایل، کد تأیید یا رمز عبور را بررسی کنید."));
     } finally { setLoading(false); }
   };
 
