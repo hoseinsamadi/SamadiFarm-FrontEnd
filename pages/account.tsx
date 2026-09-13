@@ -20,6 +20,7 @@ interface AccountUser {
 interface OrderItem { name?: string; qty?: number; }
 interface UserOrder {
   id: number;
+  order_reference: string;
   amount: string;
   currency: string;
   payment_status_label: string;
@@ -207,7 +208,7 @@ export default function AccountPage() {
           <span><IconCheck size={18} /></span>
           <div><h2>سفارش‌های من</h2><p>وضعیت سفارش‌ها از همین‌جا قابل پیگیری است.</p></div>
         </div>
-        {ordersLoading ? <p className="orders-muted">در حال دریافت سفارش‌ها...</p> : orders.length === 0 ? <p className="orders-muted">هنوز سفارشی برای این حساب ثبت نشده است.</p> : <div className="orders-list">{orders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><strong>سفارش شماره {order.id}</strong><time>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(order.created_at))}</time></div><div className="order-card-meta"><span>پرداخت: {order.payment_status_label}</span><span>روش: {order.method_label}</span><strong>{order.amount} {order.currency}</strong></div><div className="order-status-row"><span className={`order-status order-status--${order.order_status}`}>{order.order_status_label}</span>{order.items?.length > 0 && <span className="order-items-preview">{order.items.map((item) => `${item.name || "محصول"} × ${item.qty || 1}`).join("، ")}</span>}</div>{order.transaction_hash && <small className="order-hash">هش تراکنش: {order.transaction_hash}</small>}</article>)}</div>}
+        {ordersLoading ? <p className="orders-muted">در حال دریافت سفارش‌ها...</p> : orders.length === 0 ? <p className="orders-muted">هنوز سفارشی برای این حساب ثبت نشده است.</p> : <div className="orders-list">{orders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><strong>کد پیگیری: <bdi dir="ltr">{order.order_reference || `SF-${order.id}`}</bdi></strong><time>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(order.created_at))}</time></div><div className="order-card-meta"><span>پرداخت: {order.payment_status_label}</span><span>روش: {order.method_label}</span><strong>{order.amount} {order.currency}</strong></div><div className="order-status-row"><span className={`order-status order-status--${order.order_status}`}>{order.order_status_label}</span>{order.items?.length > 0 && <span className="order-items-preview">{order.items.map((item) => `${item.name || "محصول"} × ${item.qty || 1}`).join("، ")}</span>}</div>{order.transaction_hash && <small className="order-hash">{order.method_label === "کارت به کارت" ? "کد رهگیری بانکی" : "هش / شناسه تراکنش"}: {order.transaction_hash}</small>}</article>)}</div>}
       </div>
 
       <div className="address-actions" style={{ marginTop: "1.5rem" }}>
